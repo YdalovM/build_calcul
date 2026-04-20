@@ -2,6 +2,8 @@ import { ImageResponse } from "next/og";
 
 import { siteSeo } from "@/content/seo";
 
+export const dynamic = "force-static";
+
 // ИИ: дефолтное OG-изображение для соцсетей и части сниппетов. Текст латиницей —
 // в @vercel/og/Satori без встроенного шрифта кириллица может не отрисоваться.
 // Русское описание страницы задаётся в metadata / export const alt ниже.

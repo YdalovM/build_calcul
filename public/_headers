@@ -1,0 +1,10 @@
+# Static export: copied to out/. Used by Cloudflare Pages / Netlify.
+# CSP matches components/analytics/yandex-metrika.tsx (mc.yandex.ru, yastatic.net).
+# For Nginx-only hosts see deploy/nginx-security-headers.example.conf
+
+/*
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; frame-ancestors 'self'; frame-src 'self' https://mc.yandex.ru; img-src 'self' data: https:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://yastatic.net; connect-src 'self' https:; object-src 'none'; form-action 'self'; upgrade-insecure-requests

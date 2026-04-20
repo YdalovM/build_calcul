@@ -4,6 +4,8 @@ import type { MetadataRoute } from "next";
 import { type IndexedStaticRoute, indexedStaticRoutes, siteSeo } from "@/content/seo";
 import { getSiteUrl } from "@/lib/site-url";
 
+export const dynamic = "force-static";
+
 function sitemapPriority(path: IndexedStaticRoute): number {
   if (path === "/") return 1;
   if (path === "/o-proekte") return 0.65;

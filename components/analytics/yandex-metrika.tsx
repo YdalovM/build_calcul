@@ -5,6 +5,10 @@ import { resolveYandexMetrikaCounterId } from "@/lib/yandex-metrika-counter";
 /**
  * Подключается только если задан `NEXT_PUBLIC_YM_COUNTER_ID`.
  * `lazyOnload` — не конкурирует с LCP на мобилке.
+ *
+ * CSP на статике: `public/_headers` (и копия в `out/`). При смене доменов/опций
+ * init (webvisor, ecommerce) — синхронизировать с тем же файлом и с
+ * `deploy/nginx-security-headers.example.conf`.
  */
 export function YandexMetrika() {
   const counterId = resolveYandexMetrikaCounterId();

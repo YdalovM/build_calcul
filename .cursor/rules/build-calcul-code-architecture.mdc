@@ -66,11 +66,12 @@ alwaysApply: false
 ## Аналитика и панели (после выкладки на домен)
 
 - **Поэтапный рост и монетизация (6–8 мес., KPI, что мерить):** `build-calcul-growth-roadmap.mdc` — основной документ; здесь только техника подключения.
-- **Яндекс.Метрика:** задать `NEXT_PUBLIC_YM_COUNTER_ID`. В `next.config.ts` в CSP разрешены `https://mc.yandex.ru` и `https://yastatic.net` (скрипт), `frame-src` для вебвизора — иначе тег блокируется браузером.
-- **Цели из UI:** импорт `reachGoal` из `lib/analytics.ts` (после загрузки счётчика); имена целей согласовать с целями в интерфейсе Метрики.
-- **Google Search Console / Яндекс.Вебмастер:** коды верификации через `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` и `NEXT_PUBLIC_YANDEX_VERIFICATION` → `lib/seo-metadata.ts` (`buildRootMetadata` → `verification`). Альтернатива Вебмастера — HTML-файл в `public/` (см. документацию Яндекса).
-- **`NEXT_PUBLIC_SITE_URL`** должен совпадать с каноническим адресом в панелях (www / без www, HTTPS).
-- **Google Analytics (gtag) / другие скрипты:** при добавлении расширить CSP в `next.config.ts` (`script-src` / `connect-src` под домены провайдера), не отключать CSP целиком.
+- **Статический экспорт:** `next.config.ts` → `output: "export"`, выкладка каталога **`out/`**. Заголовки HTTP в Next **не задаём** — вместо этого репозиторий содержит **`public/_headers`** (попадает в `out/_headers`): CSP и базовые security-заголовки **уже согласованы** с подключением Метрики (`mc.yandex.ru`, `yastatic.net`, `frame-src` для вебвизора). На **Cloudflare Pages / Netlify** файл обычно подхватывается автоматически. На **своём Nginx** — перенести директивы из **`deploy/nginx-security-headers.example.conf`** в `server { }` (и не дублировать второй CSP с панели хостинга).
+- **Яндекс.Метрика:** в `.env` задать **`NEXT_PUBLIC_YM_COUNTER_ID`**, пересобрать проект; компонент `components/analytics/yandex-metrika.tsx`. Если позже меняются опции `ym(..., 'init', …)` (другие сторонние домены) — обновить **`public/_headers`** и пример Nginx синхронно.
+- **Цели из UI:** `reachGoal` из `lib/analytics.ts`; имена целей — как в интерфейсе Метрики.
+- **Search Console / Вебмастер:** `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`, `NEXT_PUBLIC_YANDEX_VERIFICATION` → `lib/seo-metadata.ts`.
+- **`NEXT_PUBLIC_SITE_URL`** — канонический URL продакшена; подставляется в **sitemap/robots при сборке**.
+- **Другие счётчики (GA и т.д.):** добавить домены в CSP в **`public/_headers`** и в **`deploy/nginx-security-headers.example.conf`**.
 
 ## Соглашения по коду
 
