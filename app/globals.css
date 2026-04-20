@@ -1,26 +1,76 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f5f5f4;
+  --foreground: #18181b;
+
+  /* DayLab / Build Calcul — единый акцент линейки (приглушённый кирпично-красный).
+     Применяется точечно: брендовая подпись, маркеры активной навигации,
+     верхняя полоса карточек-инструментов, ключевые числа результата расчёта.
+     НЕ используется как заливка основных CTA-кнопок (красный = destructive в UI). */
+  --accent: #b91c1c;
+  --accent-hover: #991b1b;
+  --accent-soft: #fef2f2;
+  --accent-fg: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Под фикс. шапку (h-14) + полосу крошек на мобилке; на md+ только крошки. */
+section[id] {
+  scroll-margin-top: 7rem;
+}
+
+@media (min-width: 768px) {
+  section[id] {
+    scroll-margin-top: 4.5rem;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* DayLab / Build Calcul — лёгкий «неоновый» отблеск акцента.
+   Применяется ТОЛЬКО на акцентные точки (брендовая строка, ключевые числа,
+   активный маркер, тонкая полоса карточки, FAQ-точка). На обычных кнопках,
+   ссылках, заголовках и поверхностях — НЕ использовать. См. правило
+   `.cursor/rules/build-calcul-visual-accent.mdc`. */
+.accent-text-glow {
+  text-shadow:
+    0 0 1px rgba(185, 28, 28, 0.35),
+    0 0 10px rgba(185, 28, 28, 0.28);
+}
+
+.accent-ring-glow {
+  box-shadow:
+    0 0 0 1px rgba(185, 28, 28, 0.18),
+    0 0 10px rgba(185, 28, 28, 0.28);
+}
+
+/* DayLab / Build Calcul — направленный неон для конструктивных кромок layout
+   (правая граница десктоп-сайдбара, нижняя граница мобильного хедера).
+   Парно идёт с `border-accent` — солидная линия + мягкий отблеск в сторону
+   контента. Если применить без border-accent, линия потеряется на белом. */
+.accent-edge-right {
+  box-shadow: 1px 0 10px -4px rgba(185, 28, 28, 0.4);
+}
+
+.accent-edge-bottom {
+  box-shadow: 0 1px 10px -4px rgba(185, 28, 28, 0.4);
 }

@@ -1,0 +1,88 @@
+---
+description: Build Calcul — слои репозитория, соглашения и чеклист для ИИ
+globs: "{app,components,lib,content}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Build Calcul: архитектура кода и стиль DayLab
+
+Общая линия DayLab по слоям и предсказуемости импортов: см. `daylab-design-thread.mdc` (раздел «Архитектура и код»). Этот файл — **контракт именно репозитория `build_calcul`**: что где лежит и в каком порядке трогать при задачах.
+
+## Слои (строгое разделение)
+
+| Каталог | Назначение | Запрещено |
+|--------|------------|-----------|
+| `app/` | Маршруты App Router, `export const metadata`, композиция секций страницы | Бизнес-формулы расчётов, длинные SEO-строки (только импорт из `content`/`lib`) |
+| `components/` | UI, разметка, состояние форм; клиентские компоненты помечены `"use client"` | Импорт тяжёлого серверного кода без нужды; дублирование формул из `lib/calculators` |
+| `lib/calculators/` | Чистые функции: вход → результат, округление, типы | JSX, React hooks, обращение к `window` без проверки среды |
+| `lib/seo-metadata.ts`, `lib/seo-page-jsonld.ts`, `lib/seo-home-jsonld.ts` | Сборка `Metadata` и JSON-LD | Контентные тексты длиннее коротких склеек — брать из `content/seo.ts` |
+| `lib/site-url.ts` | Базовый URL сайта для каноникалов и схем | Хардкод продакшен-URL в нескольких местах |
+| `lib/yandex-metrika-counter.ts` | Разбор `NEXT_PUBLIC_YM_COUNTER_ID` (без дефолта — счётчик только на проде с env) | Хардкод ID счётчика в коде |
+| `lib/analytics.ts` | `reachGoal` и будущие обёртки над `window.ym` | Прямые вызовы `ym` из компонентов без проверки среды |
+| `components/analytics/yandex-metrika.tsx` | Вставка тега Метрики (`lazyOnload`), `window.YM_COUNTER_ID` для целей | Дублировать скрипт в страницах |
+| `content/site.ts` | Навигация, `pageIdentityByPath` (крошки + подзаголовок в layout), тэглайн, FAQ главной | Дублировать пути, которых нет в `content/seo.ts` `indexedStaticRoutes` |
+| `content/seo.ts` | Тексты для metadata/OG, тип `IndexedStaticRoute`, список индексируемых путей | Тексты абзацев калькуляторов — они в `content/calculators/*` |
+| `content/calculators/*.ts` | Заголовки страниц, описания, FAQ, лейблы полей, допущения для одного калькулятора | Формулы расчёта |
+
+Визуальный акцент (кирпичный красный, неон, границы layout): **`build-calcul-visual-accent.mdc`**, не дублировать правила здесь.
+
+## Карта `components/`
+
+- `layout/` — каркас: `SiteShell` → `SiteLayoutFrame`, `Breadcrumbs`, `PageIntroBand`, `SiteNav`.
+- `seo/` — только `JsonLd` (скрипт `application/ld+json`).
+- `analytics/` — только `YandexMetrika`; подключается в `app/layout.tsx`, без env не рендерит тег.
+- `calculators/` — формы калькуляторов, `CalculatorHeader`, `NumberField`, `AreaSumHelper` и т.д.
+
+Новые переиспользуемые блоки раскладывать по смыслу; не смешивать layout и калькулятор в одном файле без причины.
+
+## Типовой порядок на странице калькулятора (`app/.../page.tsx`)
+
+1. `export const metadata` через `buildRouteMetadata("/...")`.
+2. `<JsonLd data={...} />` из `lib/seo-page-jsonld`.
+3. `<PageIntroBand>` — текст из `content/calculators/<name>.ts` (`pageTitle`, `pageDescription`, `seoAnswer`).
+4. Компонент `<XxxCalculator />`.
+5. Дополнительные секции (FAQ, перелинковка) — по образцу существующих страниц.
+
+Главная (`app/page.tsx`): свой паттерн — блок инструментов внутри `PageIntroBand`, секции `#workflow`, `#faq`; в сайдбаре группа «Главное» — главная + калькуляторы, «Страницы» — о проекте и политика (якоря главной в меню не дублируем).
+
+## Синхронизация SEO (критично для ИИ)
+
+При добавлении **новой статической страницы** обновить согласованно:
+
+1. `content/seo.ts` — `IndexedStaticRoute` и массив `indexedStaticRoutes`.
+2. `lib/seo-metadata.ts` — `pageSeoByRoute` (или расширить тип, если добавлены поля).
+3. `lib/seo-page-jsonld.ts` — билдер(ы) JSON-LD при необходимости.
+4. `content/site.ts` — `pageIdentityByPath` и при необходимости `mainNavGroups`.
+5. `app/sitemap.ts` подтягивает пути из `indexedStaticRoutes` — отдельно править список URL не нужно, если п.1 сделан.
+
+## Новый калькулятор — чеклист
+
+1. `content/calculators/<id>.ts` — тексты и лейблы.
+2. `lib/calculators/<id>.ts` — чистая логика + defaults.
+3. `components/calculators/<id>-calculator.tsx` — UI, `CalculatorHeader`, при необходимости `NumberField` / помощники.
+4. `app/<route>/page.tsx` — композиция по шаблону выше.
+5. Пункты раздела «Синхронизация SEO» + запись в SEO-правилах при особых требованиях к схемам.
+
+## Аналитика и панели (после выкладки на домен)
+
+- **Поэтапный рост и монетизация (6–8 мес., KPI, что мерить):** `build-calcul-growth-roadmap.mdc` — основной документ; здесь только техника подключения.
+- **Яндекс.Метрика:** задать `NEXT_PUBLIC_YM_COUNTER_ID`. В `next.config.ts` в CSP разрешены `https://mc.yandex.ru` и `https://yastatic.net` (скрипт), `frame-src` для вебвизора — иначе тег блокируется браузером.
+- **Цели из UI:** импорт `reachGoal` из `lib/analytics.ts` (после загрузки счётчика); имена целей согласовать с целями в интерфейсе Метрики.
+- **Google Search Console / Яндекс.Вебмастер:** коды верификации через `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` и `NEXT_PUBLIC_YANDEX_VERIFICATION` → `lib/seo-metadata.ts` (`buildRootMetadata` → `verification`). Альтернатива Вебмастера — HTML-файл в `public/` (см. документацию Яндекса).
+- **`NEXT_PUBLIC_SITE_URL`** должен совпадать с каноническим адресом в панелях (www / без www, HTTPS).
+- **Google Analytics (gtag) / другие скрипты:** при добавлении расширить CSP в `next.config.ts` (`script-src` / `connect-src` под домены провайдера), не отключать CSP целиком.
+
+## Соглашения по коду
+
+- Формулы только в `lib/calculators/*`; в компоненте — вызов и отображение.
+- Не использовать `any`; пустые `catch` не оставлять.
+- Комментарии с префиксом `ИИ:` — для будущих агентов: объясняют **почему** неочевидное решение, а не дублируют очевидное.
+- После нетривиальных изменений: `yarn lint` и `yarn build`.
+
+## Связанные правила в `.cursor/rules/`
+
+- `build-calcul-workspace.mdc` — приоритеты и что не ломать.
+- `build-calcul-growth-roadmap.mdc` — этапы роста, метрики, монетизация.
+- `build-calcul-seo-content.mdc` — контент и техническое SEO.
+- `build-calcul-tz-ai.mdc` — продуктовое ТЗ.
+- `build-calcul-visual-accent.mdc` — визуальный подчёрк.
