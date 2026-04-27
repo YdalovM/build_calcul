@@ -4,14 +4,19 @@ import { getSiteUrl } from "@/lib/site-url";
 
 const siteUrl = getSiteUrl();
 
-function siteVerification(): Metadata["verification"] | undefined {
-  const google = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
-  const yandex = process.env.NEXT_PUBLIC_YANDEX_VERIFICATION?.trim();
-  if (!google && !yandex) return undefined;
-  return {
-    ...(google ? { google } : {}),
-    ...(yandex ? { yandex } : {}),
-  };
+/** Google Search Console: `<meta name="google-site-verification" … />` */
+const GOOGLE_SITE_VERIFICATION = "b46Lt43YgDmdzHUUJQv2mdyIvb5XBlBHsQeLdr85UDw";
+/** Токен Яндекс.Вебмастера: `<meta name="yandex-verification" … />` */
+const YANDEX_SITE_VERIFICATION = "ab7ca4ccebe3bea9";
+
+function siteVerification(): Metadata["verification"] {
+  const google =
+    process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim() ||
+    GOOGLE_SITE_VERIFICATION;
+  const yandex =
+    process.env.NEXT_PUBLIC_YANDEX_VERIFICATION?.trim() ||
+    YANDEX_SITE_VERIFICATION;
+  return { google, yandex };
 }
 
 // ИИ: root metadata = глобальные дефолты проекта.

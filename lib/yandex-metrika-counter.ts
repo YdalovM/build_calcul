@@ -1,13 +1,19 @@
+const DEFAULT_YM_COUNTER_ID = 108775784;
+
 /**
- * Номер счётчика Яндекс.Метрики только из env — без «тихого» дефолта,
- * чтобы локальная разработка и превью не засоряли прод-статистику.
- *
- * На проде после создания счётчика: `NEXT_PUBLIC_YM_COUNTER_ID=12345678`.
+ * Номер счётчика Яндекс.Метрики: по умолчанию `108775784`, переопределение
+ * через `NEXT_PUBLIC_YM_COUNTER_ID`. Для отключения локально/на превью:
+ * `NEXT_PUBLIC_YM_COUNTER_ID=0` или пустая строка.
  */
 export function resolveYandexMetrikaCounterId(): number | null {
   const raw = process.env.NEXT_PUBLIC_YM_COUNTER_ID;
-  if (raw === undefined || raw === "") return null;
-  const n = Number.parseInt(String(raw).trim(), 10);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return n;
+  if (raw !== undefined) {
+    const trimmed = String(raw).trim();
+    if (trimmed === "" || trimmed === "0" || trimmed === "false" || trimmed === "off")
+      return null;
+    const n = Number.parseInt(trimmed, 10);
+    if (Number.isFinite(n) && n > 0) return n;
+    return null;
+  }
+  return DEFAULT_YM_COUNTER_ID;
 }
